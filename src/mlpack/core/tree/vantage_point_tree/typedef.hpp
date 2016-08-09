@@ -70,6 +70,13 @@ using VPTree = VantagePointTree<MetricType,
                                 bound::HollowBallBound,
                                 VantagePointSplit>;
 
+template<typename MetricType, typename StatisticType, typename MatType>
+using HRectVPTree = VantagePointTree<MetricType,
+                                StatisticType,
+                                MatType,
+                                bound::HollowHRectBound,
+                                VantagePointSplit>;
+
 } // namespace tree
 } // namespace mlpack
 

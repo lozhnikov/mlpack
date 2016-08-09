@@ -209,9 +209,23 @@ SelectVantagePoint(const MetricType& metric, const MatType& data,
     // candidate using these random samples.
     distances.set_size(samples.n_elem);
 
-    for (size_t j = 0; j < samples.n_elem; j++)
-      distances[j] = metric.Evaluate(data.col(vantagePointCandidates[i]),
-          data.col(samples[j]));
+    if (bound::meta::IsHollowBallBound<BoundType>::value)
+    {
+      for (size_t j = 0; j < samples.n_elem; j++)
+        distances[j] = metric.Evaluate(data.col(vantagePointCandidates[i]),
+            data.col(samples[j]));
+    }
+    else
+    {
+      for (size_t j = 0; j < samples.n_elem; j++)
+      {
+        distances[j] = 0;
+        for (size_t k = 0; k < data.n_rows; k++)
+          distances[j] = std::max(distances[j],
+              std::fabs(data(k, vantagePointCandidates[i]) -
+                        data(k, samples[j])));
+      }
+    }
 
     const ElemType spread = arma::sum(distances % distances) / samples.n_elem;
 

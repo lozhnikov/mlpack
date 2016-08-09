@@ -213,6 +213,21 @@ struct BoundTraits<HollowBallBound<MetricType, ElemType>>
   const static bool HasTightBounds = false;
 };
 
+namespace meta {
+template<typename BoundType>
+struct IsHollowBallBound
+{
+  static const bool value = false;
+};
+
+template<typename MetricType, typename ElemType>
+struct IsHollowBallBound<HollowBallBound<MetricType, ElemType>>
+{
+  static const bool value = true;
+};
+
+} // namespace meta
+
 } // namespace bound
 } // namespace mlpack
 

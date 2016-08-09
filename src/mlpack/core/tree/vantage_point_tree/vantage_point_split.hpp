@@ -103,7 +103,16 @@ class VantagePointSplit
                                   const size_t point,
                                   const ElemType mu)
   {
-    return (metric.Evaluate(vantagePoint, mat.col(point)) < mu);
+    if (bound::meta::IsHollowBallBound<BoundType>::value)
+      return (metric.Evaluate(vantagePoint, mat.col(point)) < mu);
+    else
+    {
+      for (size_t k = 0; k < mat.n_rows; k++)
+        if (std::fabs(vantagePoint[k] - mat(k, point)) >= mu)
+          return false;
+
+      return true;
+    }
   }
 
   /**

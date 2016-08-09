@@ -398,6 +398,10 @@ void NSModel<SortPolicy>::BuildModel(arma::mat&& referenceSet,
       nSearch = new NSType<SortPolicy, tree::VPTree>(naive, singleMode,
           epsilon);
       break;
+    case HRECT_VP_TREE:
+      nSearch = new NSType<SortPolicy, tree::HRectVPTree>(naive, singleMode,
+          epsilon);
+      break;
   }
 
   TrainVisitor<SortPolicy> tn(std::move(referenceSet), leafSize);
@@ -484,6 +488,8 @@ std::string NSModel<SortPolicy>::TreeName() const
       return "R++ tree";
     case VP_TREE:
       return "Vantage point tree";
+    case HRECT_VP_TREE:
+      return "Hyperrectangle vantage point tree";
     default:
       return "unknown tree";
   }

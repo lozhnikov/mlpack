@@ -34,6 +34,8 @@ set(SOURCES
   example_tree.hpp
   hollow_ball_bound.hpp
   hollow_ball_bound_impl.hpp
+  hollow_hrect_bound.hpp
+  hollow_hrect_bound_impl.hpp
   hrectbound.hpp
   hrectbound_impl.hpp
   rectangle_tree.hpp

@@ -61,8 +61,9 @@ PARAM_INT_IN("k", "Number of furthest neighbors to find.", "k", 0);
 
 // The user may specify the type of tree to use, and a few pararmeters for tree
 // building.
-PARAM_STRING_IN("tree_type", "Type of tree to use: 'kd', 'vp', 'cover', 'r', "
-    "'r-star', 'x', 'ball', 'hilbert-r', 'r-plus', 'r-plus-plus'.", "t", "kd");
+PARAM_STRING_IN("tree_type", "Type of tree to use: 'kd', 'vp', 'hrect-vp', "
+    "'cover', 'r', 'r-star', 'x', 'ball', 'hilbert-r', 'r-plus', "
+    "'r-plus-plus'.", "t", "kd");
 PARAM_INT_IN("leaf_size", "Leaf size for tree building (used for kd-trees, vp "
     "trees, R trees, R* trees, X trees, Hilbert R trees, R+ trees and R++ "
     "trees).", "l", 20);
@@ -196,10 +197,12 @@ int main(int argc, char *argv[])
       tree = KFNModel::R_PLUS_PLUS_TREE;
     else if (treeType == "vp")
       tree = KFNModel::VP_TREE;
+    else if (treeType == "hrect-vp")
+      tree = KFNModel::HRECT_VP_TREE;
     else
       Log::Fatal << "Unknown tree type '" << treeType << "'; valid choices are "
           << "'kd', 'cover', 'r', 'r-star', 'x', 'ball', 'hilbert-r', "
-          << "'r-plus', 'r-plus-plus' and 'vp'." << endl;
+          << "'r-plus', 'r-plus-plus', 'vp' and 'hrect-vp'." << endl;
 
     kfn.TreeType() = tree;
     kfn.RandomBasis() = randomBasis;

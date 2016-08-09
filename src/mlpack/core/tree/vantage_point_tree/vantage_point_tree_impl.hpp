@@ -532,7 +532,7 @@ VantagePointTree<MetricType, StatisticType, MatType, BoundType,
     return 0.0;
 
   // Otherwise return the distance from the center to a corner of the bound.
-  return bound.OuterRadius();
+  return 0.5 * bound.Diameter();
 }
 
 /**
@@ -570,7 +570,7 @@ typename VantagePointTree<MetricType, StatisticType, MatType, BoundType,
 VantagePointTree<MetricType, StatisticType, MatType, BoundType,
     SplitType>::MinimumBoundDistance() const
 {
-  return bound.OuterRadius();
+  return 0.5 * bound.MinWidth();
 }
 
 /**
@@ -670,15 +670,7 @@ void VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>:
               SplitType<BoundType<MetricType>, MatType>& splitter)
 {
   // We need to expand the bounds of this node properly.
-  if (parent)
-  {
-    bound.Center() = dataset->col(parent->begin);
-    bound.OuterRadius() = 0;
-    bound.InnerRadius() = std::numeric_limits<ElemType>::max();
-  }
-
-  if (count > 0)
-    bound |= dataset->cols(begin, begin + count - 1);
+  UpdateBound(bound);
 
   // Calculate the furthest descendant distance.
   furthestDescendantDistance = 0.5 * bound.Diameter();
@@ -713,22 +705,37 @@ void VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>:
 
   // Calculate parent distances for those three nodes.
 
-  ElemType parentDistance;
+  if (bound::meta::IsHollowBallBound<BoundType<MetricType, ElemType>>::value)
+  {
+    ElemType parentDistance;
 
-  if (parent)
-    parentDistance = MetricType::Evaluate(dataset->col(parent->begin),
-        dataset->col(begin));
+    if (parent)
+      parentDistance = MetricType::Evaluate(dataset->col(parent->begin),
+          dataset->col(begin));
+    else
+    {
+      arma::vec center;
+      Center(center);
+
+      parentDistance = MetricType::Evaluate(center, dataset->col(begin));
+    }
+
+    central->ParentDistance() = parentDistance;
+    inner->ParentDistance() = parentDistance;
+    outer->ParentDistance() = parentDistance;
+  }
   else
   {
-    arma::vec center;
+    arma::vec center, innerCenter, outerCenter, centralCenter;
     Center(center);
+    central->Center(centralCenter);
+    inner->Center(innerCenter);
+    outer->Center(outerCenter);
 
-    parentDistance = MetricType::Evaluate(center, dataset->col(begin));
+    central->ParentDistance() = MetricType::Evaluate(center, centralCenter);
+    inner->ParentDistance() = MetricType::Evaluate(center, innerCenter);
+    outer->ParentDistance() = MetricType::Evaluate(center, outerCenter);
   }
-
-  central->ParentDistance() = parentDistance;
-  inner->ParentDistance() = parentDistance;
-  outer->ParentDistance() = parentDistance;
 }
 
 template<typename MetricType,
@@ -744,15 +751,7 @@ SplitNode(std::vector<size_t>& oldFromNew,
 {
   // We need to expand the bounds of this node properly.
 
-  if (parent)
-  {
-    bound.Center() = dataset->col(parent->begin);
-    bound.OuterRadius() = 0;
-    bound.InnerRadius() = std::numeric_limits<ElemType>::max();
-  }
-
-  if (count > 0)
-    bound |= dataset->cols(begin, begin + count - 1);
+  UpdateBound(bound);
 
   // Calculate the furthest descendant distance.
   furthestDescendantDistance = 0.5 * bound.Diameter();
@@ -787,24 +786,106 @@ SplitNode(std::vector<size_t>& oldFromNew,
       oldFromNew, splitter, maxLeafSize);
 
   // Calculate parent distances for those two nodes.
-  ElemType parentDistance;
-
-  if (parent)
+  if (bound::meta::IsHollowBallBound<BoundType<MetricType, ElemType>>::value)
   {
-    parentDistance = MetricType::Evaluate(dataset->col(parent->begin),
-        dataset->col(begin));
+    ElemType parentDistance;
+
+    if (parent)
+      parentDistance = MetricType::Evaluate(dataset->col(parent->begin),
+          dataset->col(begin));
+    else
+    {
+      arma::vec center;
+      Center(center);
+
+      parentDistance = MetricType::Evaluate(center, dataset->col(begin));
+    }
+
+    central->ParentDistance() = parentDistance;
+    inner->ParentDistance() = parentDistance;
+    outer->ParentDistance() = parentDistance;
   }
   else
   {
-    arma::vec center;
+    arma::vec center, innerCenter, outerCenter, centralCenter;
     Center(center);
+    central->Center(centralCenter);
+    inner->Center(innerCenter);
+    outer->Center(outerCenter);
 
-    parentDistance = MetricType::Evaluate(center, dataset->col(begin));
+    central->ParentDistance() = MetricType::Evaluate(center, centralCenter);
+    inner->ParentDistance() = MetricType::Evaluate(center, innerCenter);
+    outer->ParentDistance() = MetricType::Evaluate(center, outerCenter);
+  }
+}
+
+template<typename MetricType,
+         typename StatisticType,
+         typename MatType,
+         template<typename BoundMetricType, typename...> class BoundType,
+         template<typename SplitBoundType, typename SplitMatType, size_t...>
+             class SplitType>
+template<typename BoundType2>
+void VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>::
+UpdateBound(BoundType2& b, typename boost::enable_if<
+    bound::meta::IsHollowBallBound<BoundType2>>::type*)
+{
+  if (parent)
+  {
+    b.Center() = dataset->col(parent->begin);
+    b.OuterRadius() = 0;
+    b.InnerRadius() = std::numeric_limits<ElemType>::max();
   }
 
-  central->ParentDistance() = parentDistance;
-  inner->ParentDistance() = parentDistance;
-  outer->ParentDistance() = parentDistance;
+  if (count > 0)
+    b |= dataset->cols(begin, begin + count - 1);
+}
+
+template<typename MetricType,
+         typename StatisticType,
+         typename MatType,
+         template<typename BoundMetricType, typename...> class BoundType,
+         template<typename SplitBoundType, typename SplitMatType, size_t...>
+             class SplitType>
+template<typename BoundType2>
+void VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>::
+UpdateBound(BoundType2& b, typename boost::enable_if<
+    bound::meta::IsHollowHRectBound<BoundType2>>::type*)
+{
+  if (count > 0)
+    b |= dataset->cols(begin, begin + count - 1);
+
+  if (parent == NULL)
+    return;
+  if (parent->inner == NULL || parent->inner == this)
+    return;
+
+  b.Hollows() = parent->bound.Hollows();
+/*
+  bound::HRectBound<MetricType, ElemType> hollow(dataset->n_rows);
+  ElemType mu = 0;
+  for (size_t k = 0; k < dataset->n_rows; k++)
+  {
+    ElemType dist = std::fabs(dataset->col(parent->central->Point(0))[k] -
+        parent->inner->bound.OuterRect()[k].Lo());
+
+    if (dist > mu)
+      mu = dist;
+
+    dist = std::fabs(dataset->col(parent->central->Point(0))[k] -
+        parent->inner->bound.OuterRect()[k].Hi());
+    if (dist > mu)
+      mu = dist;
+  }
+
+  for (size_t k = 0; k < dataset->n_rows; k++)
+  {
+    hollow[k].Lo() = dataset->col(parent->central->Point(0))[k] - mu;
+    hollow[k].Hi() = dataset->col(parent->central->Point(0))[k] + mu;
+  }
+  b.AddHollow(hollow);
+*/
+  b.AddHollow(parent->inner->bound.OuterRect());
 }
 
 // Default constructor (private), for boost::serialization.

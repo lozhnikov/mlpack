@@ -57,9 +57,12 @@ DualTreeTraverser<RuleType>::Traverse(
   {
     TravInfo traversalInfo = rule.TraversalInfo();
 
-    if (traversalInfo.LastQueryNode() == &queryNode &&
-        traversalInfo.LastReferenceNode() == &referenceNode)
-        return; // We have already calculated this base case.
+    if (TreeTraits<VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>>::FirstSiblingFirstPointIsCentroid)
+    {
+      if (traversalInfo.LastQueryNode() == &queryNode &&
+          traversalInfo.LastReferenceNode() == &referenceNode)
+          return; // We have already calculated this base case.
+    }
 
     // Loop through each of the points in each node.
     const size_t queryEnd = queryNode.Begin() + queryNode.Count();
@@ -134,12 +137,15 @@ DualTreeTraverser<RuleType>::Traverse(
     // We have to calculate the base case with the central reference node.
     // All children of a vantage point tree node use the same traversal
     // information.
-    traversalInfo.LastQueryNode() = queryNode.Central();
-    traversalInfo.LastReferenceNode() = referenceNode.Central();
-    traversalInfo.LastBaseCase() = rule.BaseCase(queryNode.Central()->Point(0),
-        referenceNode.Central()->Point(0));
-    traversalInfo.LastScore() = traversalInfo.LastBaseCase();
-    numBaseCases++;
+    if (TreeTraits<VantagePointTree<MetricType, StatisticType, MatType, BoundType, SplitType>>::FirstSiblingFirstPointIsCentroid)
+    {
+      traversalInfo.LastQueryNode() = queryNode.Central();
+      traversalInfo.LastReferenceNode() = referenceNode.Central();
+      traversalInfo.LastBaseCase() = rule.BaseCase(queryNode.Central()->Point(0),
+          referenceNode.Central()->Point(0));
+      traversalInfo.LastScore() = traversalInfo.LastBaseCase();
+      numBaseCases++;
+    }
 
     rule.TraversalInfo() = traversalInfo;
 

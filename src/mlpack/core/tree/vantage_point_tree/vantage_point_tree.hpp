@@ -460,6 +460,14 @@ class VantagePointTree
   //! Store the center of the bounding region in the given vector.
   void Center(arma::vec& center) { bound.Center(center); }
 
+  template<typename BoundType2>
+  void UpdateBound(BoundType2& b, typename boost::enable_if<
+      bound::meta::IsHollowBallBound<BoundType2>>::type* = NULL);
+
+  template<typename BoundType2>
+  void UpdateBound(BoundType2& b, typename boost::enable_if<
+      bound::meta::IsHollowHRectBound<BoundType2>>::type* = NULL);
+
  private:
   /**
    * Splits the current node, assigning its left and right children recursively.

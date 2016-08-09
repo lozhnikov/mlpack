@@ -258,7 +258,8 @@ class NSModel
     HILBERT_R_TREE,
     R_PLUS_TREE,
     R_PLUS_PLUS_TREE,
-    VP_TREE
+    VP_TREE,
+    HRECT_VP_TREE
   };
 
  private:
@@ -287,7 +288,8 @@ class NSModel
                  NSType<SortPolicy, tree::HilbertRTree>*,
                  NSType<SortPolicy, tree::RPlusTree>*,
                  NSType<SortPolicy, tree::RPlusPlusTree>*,
-                 NSType<SortPolicy, tree::VPTree>*> nSearch;
+                 NSType<SortPolicy, tree::VPTree>*,
+                 NSType<SortPolicy, tree::HRectVPTree>*> nSearch;
 
  public:
   /**

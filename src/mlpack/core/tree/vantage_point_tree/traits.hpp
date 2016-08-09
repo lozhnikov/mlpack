@@ -59,6 +59,47 @@ class TreeTraits<VantagePointTree<MetricType, StatisticType, MatType, BoundType,
   static const bool BinaryTree = false;
 };
 
+template<typename MetricType,
+         typename StatisticType,
+         typename MatType,
+         template<typename SplitBoundType, typename SplitMatType, size_t...>
+             class SplitType>
+class TreeTraits<VantagePointTree<MetricType, StatisticType, MatType,
+  bound::HollowHRectBound, SplitType>>
+{
+ public:
+  /**
+   * Children nodes may overlap each other.
+   */
+  static const bool HasOverlappingChildren = true;
+
+  /**
+   * The first point of the node is not the centroid of its bound.
+   */
+  static const bool FirstPointIsCentroid = false;
+
+  /**
+   * The first point of the central node (vantage point) is the centroid of
+   * its siblings.
+   */
+  static const bool FirstSiblingFirstPointIsCentroid = false;
+
+  /**
+   * Points are not contained at multiple levels of the vantage point tree.
+   */
+  static const bool HasSelfChildren = false;
+
+  /**
+   * Points are rearranged during building of the tree.
+   */
+  static const bool RearrangesDataset = true;
+
+  /**
+   * This is not a binary tree.
+   */
+  static const bool BinaryTree = false;
+};
+
 } // namespace tree
 } // namespace mlpack
 
